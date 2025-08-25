@@ -2,6 +2,9 @@
 
 A Firefox extension that automatically adds note tags at the beginning of content in Standard Notes using the `<<<Location>>>` format.
 
+Available at:
+https://addons.mozilla.org/pt-BR/firefox/addon/standard-notes-tag-location/
+
 ## 🎯 Features
 
 - **Automatic Tag Detection**: Intelligently identifies tags in your Standard Notes
@@ -142,3 +145,4 @@ Se a extensão não funcionar:
 - Funciona apenas no Standard Notes web (app.standardnotes.com)
 - Detecta apenas tags visíveis na interface de usuário
 - Pode precisar de ajustes se o Standard Notes mudar sua estrutura DOM
+
