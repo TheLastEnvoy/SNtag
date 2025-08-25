@@ -99,7 +99,35 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 📊 Version History
 
+### 2.1.3 (Current)
+
+- Fixed button positioning issues during note navigation
+- Enhanced element reference validation
+- Improved performance with debounced repositioning
+- Fixed TypeError with className validation
+- Reduced DOM observation noise for better stability
+
+### 2.1.2
+
+- Implemented persistent button positioning
+- Added global repositioning functions
+- Improved button state management during navigation
+
+### 2.1.1
+
+- Added protection against button duplication
+- Enhanced initialization safety
+- Improved button visibility management
+
+### 2.1.0
+
+- Enhanced security with sanitized DOM manipulation
+- Replaced innerHTML with secure DOM methods
+- Modern Firefox compatibility with browser_specific_settings
+- Improved error handling and logging
+
 ### 1.0.0
+
 - Initial release
 - Basic tag detection and insertion
 - Support for hierarchical tags
