@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Standard Notes Tag Location",
   "short_name": "SN Tag Location",
-  "version": "2.1.0",
+      "version": "2.1.3",
   "description": "Securely adds note tags at the beginning of content in Standard Notes using the <<<Location>>> format. Enhanced security, performance and stability in v2.1.",
   
   "author": "Your Name",

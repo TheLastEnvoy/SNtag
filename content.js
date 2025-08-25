@@ -2,6 +2,89 @@
     'use strict';
 
     let addLocationButton = null;
+    let isProcessing = false;
+    let globalReferenceElement = null;
+    let globalUsedSelector = null;
+    let repositionTimeout = null;
+
+    // Função global para reposicionar o botão (com debounce)
+    function repositionButton() {
+        // Limpar timeout anterior
+        if (repositionTimeout) {
+            clearTimeout(repositionTimeout);
+        }
+        
+        // Agendar reposicionamento
+        repositionTimeout = setTimeout(() => {
+            doRepositionButton();
+        }, 50);
+    }
+    
+    function doRepositionButton() {
+        if (!addLocationButton) return;
+        
+        // Revalidar elemento de referência se ele não existir mais
+        if (!globalReferenceElement || !document.contains(globalReferenceElement)) {
+            console.log('[SN Tag Addon] Elemento de referência perdido, procurando novo...');
+            
+            const referenceSelectors = [
+                '.note-view-options-buttons > button:nth-child(1) > svg:nth-child(1)',
+                '.note-view-options-buttons > button:nth-child(1)',
+                '.note-view-options-buttons > button',
+                '.note-view-options-buttons',
+                '.note-view-header button',
+                '.note-view .options button',
+                '[title="Pin"], [title="Options"], [title="Menu"]',
+                '.note-view-top button',
+                '.note-view-content-header button'
+            ];
+            
+            for (const selector of referenceSelectors) {
+                const element = document.querySelector(selector);
+                if (element) {
+                    globalReferenceElement = element;
+                    globalUsedSelector = selector;
+                    console.log('[SN Tag Addon] Novo elemento de referência encontrado:', selector);
+                    break;
+                }
+            }
+        }
+        
+        if (globalReferenceElement) {
+            try {
+                const rect = globalReferenceElement.getBoundingClientRect();
+                
+                // Verificar se o elemento tem posição válida
+                if (rect.top === 0 && rect.left === 0 && rect.width === 0 && rect.height === 0) {
+                    console.log('[SN Tag Addon] Elemento de referência sem posição válida');
+                    return;
+                }
+                
+                let newLeft;
+                
+                // Aplicar a mesma lógica de posicionamento
+                if (globalUsedSelector === '.note-view-options-buttons > button:nth-child(1) > svg:nth-child(1)') {
+                    const parentButton = globalReferenceElement.closest('button');
+                    if (parentButton) {
+                        const parentRect = parentButton.getBoundingClientRect();
+                        newLeft = Math.max(10, parentRect.left - 180);
+                    } else {
+                        newLeft = Math.max(10, rect.left - 180);
+                    }
+                } else {
+                    newLeft = Math.max(10, rect.left - 180);
+                }
+                
+                addLocationButton.style.top = `${rect.top}px`;
+                addLocationButton.style.left = `${newLeft}px`;
+                console.log('[SN Tag Addon] Botão reposicionado para:', {top: rect.top, left: newLeft});
+            } catch (e) {
+                console.log('[SN Tag Addon] Erro ao reposicionar botão:', e);
+            }
+        } else {
+            console.log('[SN Tag Addon] Nenhum elemento de referência encontrado para posicionamento');
+        }
+    }
 
     // Funções de segurança para evitar innerHTML
     function sanitizeText(text) {
@@ -1225,9 +1308,18 @@
 
     // Função para criar o botão na interface (versão melhorada)
     function createAddLocationButton() {
+        // Verificar se já existe um botão
+        const existingButton = document.querySelector('#sn-add-location-button');
+        if (existingButton) {
+            console.log('[SN Tag Addon] Botão já existe, não criando duplicado');
+            addLocationButton = existingButton;
+            return;
+        }
+        
         // Remover botão existente se houver
         if (addLocationButton) {
             addLocationButton.remove();
+            addLocationButton = null;
         }
 
         // Lista de seletores para encontrar elemento de referência (priorizando o seletor específico)
@@ -1250,6 +1342,8 @@
         for (const selector of referenceSelectors) {
             referenceElement = document.querySelector(selector);
             if (referenceElement) {
+                globalReferenceElement = referenceElement;
+                globalUsedSelector = selector;
                 usedSelector = selector;
                 console.log('[SN Tag Addon] Elemento de referência encontrado:', selector);
                 break;
@@ -1263,7 +1357,7 @@
         // Criar o botão
         addLocationButton = document.createElement('button');
         addLocationButton.textContent = 'Adicionar Localização';
-        addLocationButton.id = 'sn-add-location-btn';
+        addLocationButton.id = 'sn-add-location-button';
         
         // Determinar posicionamento do botão baseado no elemento de referência
         let buttonCSS;
@@ -1378,54 +1472,25 @@
         // Adicionar à página
         document.body.appendChild(addLocationButton);
 
-        // Função para reposicionar o botão
-        const repositionButton = () => {
-            if (addLocationButton && referenceElement) {
-                try {
-                    const rect = referenceElement.getBoundingClientRect();
-                    let newLeft;
-                    
-                    // Aplicar a mesma lógica de posicionamento
-                    if (usedSelector === '.note-view-options-buttons > button:nth-child(1) > svg:nth-child(1)') {
-                        const parentButton = referenceElement.closest('button');
-                        if (parentButton) {
-                            const parentRect = parentButton.getBoundingClientRect();
-                            newLeft = Math.max(10, parentRect.left - 180);
-                        } else {
-                            newLeft = Math.max(10, rect.left - 180);
-                        }
-                    } else {
-                        newLeft = Math.max(10, rect.left - 180);
-                    }
-                    
-                    addLocationButton.style.top = `${rect.top}px`;
-                    addLocationButton.style.left = `${newLeft}px`;
-                } catch (e) {
-                    // Se houver erro, recriar o botão
-                    console.log('[SN Tag Addon] Erro ao reposicionar, recriando botão');
-                    setTimeout(() => {
-                        if (addLocationButton) {
-                            addLocationButton.remove();
-                            addLocationButton = null;
-                            checkForEditor();
-                        }
-                    }, 100);
-                }
-            }
-        };
-
         // Adicionar listeners para reposicionamento apenas se houver elemento de referência
         if (referenceElement) {
-            window.addEventListener('resize', repositionButton);
-            window.addEventListener('scroll', repositionButton);
+            // Usar debounced functions para evitar reposicionamento excessivo
+            const debouncedReposition = debounce(repositionButton, 200);
+            window.addEventListener('resize', debouncedReposition);
+            window.addEventListener('scroll', debouncedReposition);
             
-            // Observer para detectar mudanças no elemento de referência
-            const resizeObserver = new MutationObserver(repositionButton);
+            // Observer mais restrito para detectar mudanças relevantes
+            const resizeObserver = new MutationObserver(debounce(() => {
+                // Só reposicionar se o botão ainda existir e o elemento de referência for válido
+                if (addLocationButton && globalReferenceElement && document.contains(globalReferenceElement)) {
+                    repositionButton();
+                }
+            }, 300));
+            
             resizeObserver.observe(document.body, {
                 childList: true,
                 subtree: true,
-                attributes: true,
-                attributeFilter: ['style', 'class']
+                attributes: false  // Desabilitar observação de atributos para reduzir ruído
             });
         }
 
@@ -1494,22 +1559,33 @@
             currentNoteId = noteId;
             currentUrl = window.location.href;
             
-            // Remover botão existente para recriar na nova posição
+            // Não remover o botão, apenas reposicioná-lo se necessário
             if (addLocationButton) {
-                addLocationButton.remove();
-                addLocationButton = null;
+                console.log('[SN Tag Addon] Mantendo botão e ajustando posição se necessário');
+                repositionButton();
             }
         }
         
-        if (isNotePage && editor && !addLocationButton) {
+        // Verificar se já existe um botão antes de criar um novo
+        const existingButton = document.querySelector('#sn-add-location-button');
+        if (existingButton && existingButton !== addLocationButton) {
+            existingButton.remove();
+            console.log('[SN Tag Addon] Botão duplicado removido');
+        }
+        
+        if (isNotePage && editor && !addLocationButton && !existingButton) {
             console.log('[SN Tag Addon] Criando botão para nova nota:', noteId);
             createAddLocationButton();
         } else if (!isNotePage || !editor) {
-            // Remover botão se não estivermos na página certa
+            // Esconder botão se não estivermos na página certa, mas não remover
             if (addLocationButton) {
-                addLocationButton.remove();
-                addLocationButton = null;
+                addLocationButton.style.display = 'none';
+                console.log('[SN Tag Addon] Botão escondido (fora da página de notas)');
             }
+        } else if (isNotePage && editor && addLocationButton) {
+            // Mostrar botão se estivermos na página certa
+            addLocationButton.style.display = 'block';
+            console.log('[SN Tag Addon] Botão mostrado (na página de notas)');
         }
     }
 
@@ -1532,8 +1608,8 @@
                                     node.matches('.editor-content') ||
                                     node.matches('#super-editor-content') ||
                                     node.matches('.note-view-options-buttons') ||
-                                    node.className.includes('note') ||
-                                    node.className.includes('editor')
+                                    (node.className && typeof node.className === 'string' && node.className.includes('note')) ||
+                                    (node.className && typeof node.className === 'string' && node.className.includes('editor'))
                                 );
                             }
                             return false;
@@ -1552,6 +1628,16 @@
             });
             
             if (shouldCheck) {
+                // Remover botões duplicados que possam ter sido criados
+                const allButtons = document.querySelectorAll('#sn-add-location-button');
+                if (allButtons.length > 1) {
+                    console.log('[SN Tag Addon] Removendo', allButtons.length - 1, 'botões duplicados');
+                    for (let i = 1; i < allButtons.length; i++) {
+                        allButtons[i].remove();
+                    }
+                    addLocationButton = allButtons[0];
+                }
+                
                 // Pequeno delay para aguardar a renderização completa
                 setTimeout(checkForEditor, 100);
             }
@@ -1595,8 +1681,17 @@
         console.log('[SN Tag Addon] Observer melhorado inicializado');
     }
 
+    // Variável para controlar inicialização
+    let isInitialized = false;
+
     // Função principal de inicialização
     function initialize() {
+        // Evitar múltiplas inicializações
+        if (isInitialized) {
+            console.log('[SN Tag Addon] Extensão já inicializada, ignorando...');
+            return;
+        }
+        
         console.log('[SN Tag Addon] Inicializando extensão com botão manual...');
         
         // Aguardar o carregamento completo da página
@@ -1604,6 +1699,9 @@
             document.addEventListener('DOMContentLoaded', initialize);
             return;
         }
+
+        // Marcar como inicializado
+        isInitialized = true;
 
         // Aguardar um pouco para o Standard Notes carregar
         setTimeout(() => {
