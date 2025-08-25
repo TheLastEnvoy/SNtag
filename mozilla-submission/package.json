@@ -1,0 +1,18 @@
+{
+    "repository":  {
+                       "type":  "git",
+                       "url":  "https://github.com/yourusername/standard-notes-tag-location.git"
+                   },
+    "license":  "MIT",
+    "keywords":  [
+                     "standard-notes",
+                     "tags",
+                     "productivity",
+                     "notes"
+                 ],
+    "name":  "standard-notes-tag-location",
+    "description":  "Automatically adds note tags at the beginning of content in Standard Notes",
+    "version":  "1.0.0",
+    "author":  "Your Name",
+    "homepage":  "https://github.com/yourusername/standard-notes-tag-location"
+}

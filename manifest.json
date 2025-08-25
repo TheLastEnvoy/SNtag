@@ -1,0 +1,37 @@
+{
+  "manifest_version": 2,
+  "name": "Standard Notes Tag Location",
+  "short_name": "SN Tag Location",
+  "version": "2.1.0",
+  "description": "Securely adds note tags at the beginning of content in Standard Notes using the <<<Location>>> format. Enhanced security, performance and stability in v2.1.",
+  
+  "author": "Your Name",
+  "homepage_url": "https://github.com/yourusername/standard-notes-tag-location",
+  
+  "icons": {
+    "16": "icons/addonlogo.svg",
+    "32": "icons/addonlogo.svg",
+    "48": "icons/addonlogo.svg",
+    "96": "icons/addonlogo.svg",
+    "128": "icons/addonlogo.svg"
+  },
+  
+  "permissions": [
+    "https://app.standardnotes.com/*"
+  ],
+  
+  "content_scripts": [
+    {
+      "matches": ["https://app.standardnotes.com/*"],
+      "js": ["content.js"],
+      "css": ["styles.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  
+  "browser_specific_settings": {
+    "gecko": {
+      "strict_min_version": "60.0"
+    }
+  }
+}

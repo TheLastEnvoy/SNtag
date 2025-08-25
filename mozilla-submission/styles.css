@@ -1,0 +1,26 @@
+/* Estilos para o addon de localização do Standard Notes */
+
+.sn-tag-location {
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin-bottom: 16px;
+  font-family: monospace;
+  font-size: 14px;
+  color: #333;
+  white-space: pre-wrap;
+}
+
+.sn-tag-location-dark {
+  background-color: #2a2a2a;
+  border: 1px solid #444;
+  color: #e0e0e0;
+}
+
+/* Compatibilidade com o tema dark do Standard Notes */
+.windows-web.translucent-ui .sn-tag-location {
+  background-color: var(--sn-stylekit-contrast-background-color);
+  border-color: var(--sn-stylekit-border-color);
+  color: var(--sn-stylekit-foreground-color);
+}
